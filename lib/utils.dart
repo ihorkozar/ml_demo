@@ -1,4 +1,3 @@
-import 'package:ml_demo/api/speech_api.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Command {
@@ -26,9 +25,6 @@ class Utils {
       final url = _getTextAfterCommand(text: text, command: Command.browser2);
 
       openLink(url: url);
-    } else if (text.contains(Command.answer)){
-      final body = _getTextAfterCommand(text: text, command: Command.answer);
-      textToSpeach(body);
     }
   }
 
@@ -67,9 +63,5 @@ class Utils {
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     }
-  }
-
-  static Future textToSpeach(String text) async {
-    SpeechApi.speak(text);
   }
 }

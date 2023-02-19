@@ -37,10 +37,5 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-       <queries>
-           <intent>
-               <action android:name="android.speech.RecognitionService" />
-           </intent>
-       </queries>
     </application>
 </manifest>
