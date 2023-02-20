@@ -3,6 +3,7 @@ import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:ml_demo/chat_model.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import 'api/chat_gpt_api.dart';
@@ -91,14 +92,17 @@ class _MyHomePageState extends State<MyHomePage> {
                       );
                     }),
               ),
-            ))
+            )),
+            const SizedBox(
+              height: 64,
+            ),
           ],
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: AvatarGlow(
         animate: isListening,
-        endRadius: 75,
+        endRadius: 70,
         glowColor: Theme.of(context).primaryColor,
         child: _buildFloatingActionButton(),
       ), // This trailing comma makes auto-formatting nicer for build methods.
@@ -107,41 +111,36 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildFloatingActionButton() {
     return InkWell(
-      onTapDown: (_) async {
+      onTap: () async {
         if (!isListening) {
           var available = await _speechToText.initialize();
           if (available) {
             setState(() {
               isListening = true;
-              _speechToText.listen(onResult: (result) {
-                setState(() {
-                  text = result.recognizedWords;
-                });
-              });
-            });
-          }
-        }
-      },
-      onTapUp: (_) async {
-        setState(() {
-          isListening = false;
-        });
-        await _speechToText.stop();
-        if (text.isNotEmpty && text != "Hold the button and start speaking") {
-          messages.add(ChatMsg(text: text, type: MsgType.user));
-          String? msg = await ChatGptApi.sendMsg(text);
-          if (msg != null) {
-            setState(() {
-              messages.add(ChatMsg(text: msg, type: MsgType.bot));
-            });
-            await _textToSpeach.awaitSpeakCompletion(true);
-            Future.delayed(const Duration(milliseconds: 500), () {
-              _textToSpeach.speak(msg);
+              _speechToText.listen(onResult: whenListen);
             });
           }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("your voice is not audible")));
+          await _speechToText.stop();
+          if (text.isNotEmpty && text != "Hold the button and start speaking") {
+            messages.add(ChatMsg(text: text, type: MsgType.user));
+            String? msg = await ChatGptApi.sendMsg(text);
+            if (msg != null) {
+              setState(() {
+                messages.add(ChatMsg(text: msg, type: MsgType.bot));
+              });
+              await _textToSpeach.awaitSpeakCompletion(true);
+              await Future.delayed(const Duration(milliseconds: 500), () {
+                _textToSpeach.speak(msg);
+              });
+            }
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("your voice is not audible")));
+          }
+          setState(() {
+            isListening = false;
+          });
         }
       },
       child: SizedBox(
@@ -149,13 +148,45 @@ class _MyHomePageState extends State<MyHomePage> {
         width: 80,
         child: DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(40),
-              color: Colors.blueGrey
-            ),
+                borderRadius: BorderRadius.circular(40),
+                color: Colors.blueGrey),
             child: Icon(
               isListening ? Icons.mic : Icons.mic_none,
             )),
       ),
     );
+  }
+
+  void whenListen(SpeechRecognitionResult result) async {
+    setState(() {
+      text = result.recognizedWords;
+    });
+    if (result.finalResult) {
+      setState(() {
+        isListening = false;
+      });
+      if (text.isNotEmpty && text != "Hold the button and start speaking") {
+        messages.add(ChatMsg(text: text, type: MsgType.user));
+        String? msg = await ChatGptApi.sendMsg(text);
+        if (msg != null) {
+          setState(() {
+            messages.add(ChatMsg(text: msg, type: MsgType.bot));
+          });
+          await _textToSpeach.awaitSpeakCompletion(true);
+          await Future.delayed(const Duration(seconds: 1));
+          await _textToSpeach.speak(msg);
+          await Future.delayed(const Duration(seconds: 1));
+          if (messages.length < 10) {
+            setState(() {
+              isListening = true;
+              _speechToText.listen(onResult: whenListen);
+            });
+          }
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("your voice is not audible")));
+      }
+    }
   }
 }
