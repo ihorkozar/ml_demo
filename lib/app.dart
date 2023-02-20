@@ -151,7 +151,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 borderRadius: BorderRadius.circular(40),
                 color: Colors.blueGrey),
             child: Icon(
-              isListening ? Icons.mic : Icons.mic_none,
+              isListening ? Icons.mic : Icons.mic_off,
+              color: Colors.white,
             )),
       ),
     );
