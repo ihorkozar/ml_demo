@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.anadea" "\0"
-            VALUE "FileDescription", "ml_demo" "\0"
+            VALUE "FileDescription", "ML Demo" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "ml_demo" "\0"
+            VALUE "InternalName", "ML Demo" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 com.anadea. All rights reserved." "\0"
             VALUE "OriginalFilename", "ml_demo.exe" "\0"
-            VALUE "ProductName", "ml_demo" "\0"
+            VALUE "ProductName", "ML Demo" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
