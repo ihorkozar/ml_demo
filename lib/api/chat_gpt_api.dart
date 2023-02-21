@@ -29,7 +29,7 @@ class ChatGptApi {
       return msg;
     } else {
       print("failed to fetch data");
-      return null;
+      return 'Failed to fetch data';
     }
   }
 }

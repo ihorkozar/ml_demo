@@ -26,9 +26,8 @@ class _MyHomePageState extends State<MyHomePage> {
   static final _speechToText = SpeechToText();
   static final _textToSpeech = FlutterTts();
 
-  scrollMethod() {
-    scrollController.animateTo(scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 180), curve: Curves.easeOut);
+  void _scrollDown() {
+    scrollController.jumpTo(scrollController.position.maxScrollExtent);
   }
 
   @override
@@ -112,7 +111,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildFloatingActionButton() {
     return InkWell(
       onTap: () async {
-        print("isListening $isListening");
         if (!isListening) {
           var available = await _speechToText.initialize();
           if (available) {
@@ -123,12 +121,6 @@ class _MyHomePageState extends State<MyHomePage> {
           }
         } else {
           await _speechToText.stop();
-          if (text.isNotEmpty && text != "Hold the button and start speaking") {
-            await workWithChatGPT();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("your voice is not audible")));
-          }
           setState(() {
             isListening = false;
           });
@@ -153,38 +145,43 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       text = result.recognizedWords;
     });
-    print(result.finalResult);
-    if (result.finalResult && !isListening) {
+    if (result.finalResult) {
       setState(() {
         isListening = false;
       });
-      if (text.isNotEmpty && text != "Hold the button and start speaking") {
-        await workWithChatGPT(msgLimit: 10);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("your voice is not audible")));
-      }
+      await workWithChatGPT(msgLimit: 10);
     }
   }
 
   Future<void> workWithChatGPT({int? msgLimit}) async {
-    messages.add(ChatMsg(text: text, type: MsgType.user));
-    String? msg = await ChatGptApi.sendMsg(text);
-    if (msg != null) {
-      setState(() {
-        messages.add(ChatMsg(text: msg, type: MsgType.bot));
-      });
-      await Future.delayed(const Duration(seconds: 1));
-      await _textToSpeech.speak(msg);
-    }
-    if(msgLimit != null){
-      await Future.delayed(const Duration(seconds: 1));
-      if (messages.length < msgLimit) {
+    if (text.isNotEmpty &&
+        text != "Hold the button and start speaking" &&
+        text != 'Failed to fetch data') {
+      messages.add(ChatMsg(text: text, type: MsgType.user));
+      _scrollDown();
+      String? msg = await ChatGptApi.sendMsg(text);
+      if (msg != null) {
         setState(() {
-          isListening = true;
-          _speechToText.listen(onResult: onListenResult);
+          messages.add(ChatMsg(text: msg, type: MsgType.bot));
         });
+        _scrollDown();
+        await _textToSpeech.speak(msg);
+        print('awaitSpeakCompletion');
+        await _textToSpeech.awaitSpeakCompletion(true);
       }
+      if (msgLimit != null) {
+        await Future.delayed(const Duration(seconds: 1));
+        print('start next step');
+        if (messages.length < msgLimit) {
+          setState(() {
+            isListening = true;
+            _speechToText.listen(onResult: onListenResult);
+          });
+        }
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("your voice is not audible")));
     }
   }
 }
