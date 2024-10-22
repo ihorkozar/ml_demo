@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 
    <application
-        android:label="ml_demo"
+        android:label="ML Demo"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -37,10 +37,5 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-       <queries>
-           <intent>
-               <action android:name="android.speech.RecognitionService" />
-           </intent>
-       </queries>
     </application>
 </manifest>
