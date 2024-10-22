@@ -132,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: DecoratedBox(
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(40),
-                color: Colors.blueGrey),
+                color: isListening ? Colors.red : Colors.blueGrey),
             child: Icon(
               isListening ? Icons.mic : Icons.mic_off,
               color: Colors.white,
